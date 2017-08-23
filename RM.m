@@ -80,8 +80,8 @@ classdef RM < handle
         function self = RM(varargin) 
             p = inputParser;
             addOptional(p,'N',512);
-            addOptional(p,'sigma_ff',45);
             addOptional(p,'alpha',10);
+            addOptional(p,'sigma_ff',45);
             addOptional(p,'J_ff',.5);
             addOptional(p,'J_rec',1);
             addOptional(p,'a_e',2.2);
@@ -105,8 +105,8 @@ classdef RM < handle
                                 c*(cosd(2*In)+1).^a;
             
             self.N          = p.Results.N;
-            self.sigma_ff   = p.Results.sigma_ff;
             self.alpha      = p.Results.alpha;
+            self.sigma_ff   = p.Results.sigma_ff;
             self.J_ff       = p.Results.J_ff;
             self.J_rec      = p.Results.J_rec; 
             self.a_e        = p.Results.a_e;
@@ -119,8 +119,8 @@ classdef RM < handle
             self.tau        = p.Results.tau;
             self.t_sim      = p.Results.t_sim;
             
-            self.OD_0      = p.Results.OD;
-            self.OD        = self.OD_0;
+            self.OD_0       = p.Results.OD;
+            self.OD         = self.OD_0;
             self.Theta      = linspace(-90,90,self.N)';
             self.Phi        = [];
             self.mean_JND   =  0;
@@ -144,6 +144,20 @@ classdef RM < handle
         % resetting weights
         function reset_weights(self)
             self.W          = self.W_0;
+        end
+        
+        % resetting orientation difference
+        function set_OD(self,varargin)
+            p               = inputParser;
+            addOptional(p,'od',[]);
+            p.parse(varargin{:});
+            od              = p.Results.od;
+            if ~isempty(od)
+                self.OD         = od;
+            else
+                self.OD         = self.OD_0;
+            end
+            
         end
             
         % simulation of training session
