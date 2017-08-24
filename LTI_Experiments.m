@@ -2,7 +2,8 @@
 %%%     author: Mario Senden (mario.senden@maastrichtuniversity.nl)     %%%
 
 % This is a reference implementation of the simulation experiments
-% described in (Lange, Senden, Radermacher, De Weerd, submitted)
+% described in: Lange G, Senden M, Radermacher A, De Weerd P. Learning 
+% multiple skills reveals competition rather than consolidation (submitted).
 clear all;close all;clc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -53,6 +54,7 @@ for i=1:3
                     eta,...
                     t_sim,...
                     tau,...
+                    Trials,...
                     OD_0);  
    Exp{i}.Ab    = zeros(Reps,Sessions);
    Exp{i}.At    = zeros(Reps,Sessions); 
@@ -82,19 +84,19 @@ end
 for r=1:Reps
     
     % part 1 (135° - baseline)
-    Q{1}.Phi    = 135;
-    Q{3}.Phi    = 135;
+    Q{1}.set_PHI(135);
+    Q{3}.set_PHI(135);
     for s=1:Sessions
-        Q{1}.session();
+        Q{1}.session();Q{1}.get_JND
         Q{3}.session();
-        Exp{1}.Ab(r,s)    = Q{1}.mean_JND;
-        Exp{3}.Ab(r,s)    = Q{3}.mean_JND;
+        Exp{1}.Ab(r,s)    = Q{1}.get_JND;
+        Exp{3}.Ab(r,s)    = Q{3}.get_JND;
     end
     
     % part 2a (105° & 45° - interference)
-    Q{1}.Phi    = 105;
-    Q{2}.Phi    = 105;
-    Q{3}.Phi    =  45;
+    Q{1}.set_PHI(105);
+    Q{2}.set_PHI(105);
+    Q{3}.set_PHI(45);
     Q{1}.set_OD();
     Q{2}.set_OD();
     Q{3}.set_OD();
@@ -107,8 +109,8 @@ for r=1:Reps
     end
     
     % part 2b (165° - interference)
-    Q{1}.Phi    = 165;
-    Q{2}.Phi    = 165;
+    Q{1}.set_PHI(165);
+    Q{2}.set_PHI(165);
     Q{1}.set_OD();
     Q{2}.set_OD();
     for s=1:Sessions
@@ -117,25 +119,26 @@ for r=1:Reps
     end
     
     % part 3 (135° - test)
-    Q{1}.Phi    = 135;
-    Q{2}.Phi    = 135;
-    Q{3}.Phi    = 135;
+    Q{1}.set_PHI(135);
+    Q{2}.set_PHI(135);
+    Q{3}.set_PHI(135);
     Q{1}.set_OD(Exp{1}.Ab(r,end));
     Q{2}.set_OD();
     Q{3}.set_OD(Exp{3}.Ab(r,end));
+    Q{1}.fix(0);
     Q{2}.fix(0);
     for s=1:Sessions
         Q{1}.session();
         Q{2}.session();
         Q{3}.session();
-        Exp{1}.At(r,s)    = Q{1}.mean_JND;
-        Exp{2}.At(r,s)    = Q{2}.mean_JND;
-        Exp{3}.At(r,s)    = Q{3}.mean_JND;
+        Exp{1}.At(r,s)    = Q{1}.get_JND;
+        Exp{2}.At(r,s)    = Q{2}.get_JND;
+        Exp{3}.At(r,s)    = Q{3}.get_JND;
     end
     
-    Q{1}.reset_weights();
-    Q{2}.reset_weights();
-    Q{3}.reset_weights();
+    Q{1}.reset();
+    Q{2}.reset();
+    Q{3}.reset();
 end
 
 

@@ -25,23 +25,20 @@ classdef RM < handle
 % 
 % rm = RM() creates an instance of the recurrent model of perceptual
 % learning in early visual cortex using standard parameter values 
-% (see Lange, Senden, Radermacher, De Weerd, submitted).
+% see: Lange G, Senden M, Radermacher A, De Weerd P. Learning multiple 
+% skills reveals competition rather than consolidation (submitted).
 % 
-% The public properties 'Phi' (reference orientation), 'trials' (number 
-% of trials per session) and 'OD' (orientation difference)  control the 
-% experimental setup while the property 'mean_JND' (average just noticeable
-% difference) stores simulation results.
-% 
-% Use rm.session() to simulate a single session of staircase experiment. 
-% Use rm.reset_weights() to restore the weight matrix to its naive state.
+% Use rm.set_OD(x) to set orientation difference to value 'x'; if no value
+%     is provided, OD will be reset to its baseline state (7.5 unless
+%     specified otherwise during construction)
+% Use rm.set_PHI(x) to set reference orientation to value 'x'; if no value
+%     is provided, PHI wil be reset to ts baseline state (135° unless
+%     specified otherwise during construction)
 % Use rm.fix(P) to fix a proportion 'P' of connection weights.
+% Use rm.get_JND() to read out the current JND
+% Use rm.session() to simulate a single session of staircase experiment. 
+% Use rm.reset() to restore the model to its naive state.
 
-    properties (Access = public)
-        Phi                     % stimulus orientation
-        trials                  % number of staircase trials
-        OD                      % OD of current trial
-        mean_JND                % JND (average over trials)
-    end
     properties (Access = private)
         % functions
         dV                      % neuron dynamics       
@@ -65,10 +62,17 @@ classdef RM < handle
         tau                     % membrane time constant
         Theta                   % preferred orientation of each neuron
         V                       % membrane potential
-        OD_0                    % baseline OD
         W_0                     % baseline connectivity    
         W                       % connection weight matrix
         S                       % selected connections
+        
+        % experimental setup
+        Phi_0                   % baseline stimulus orientation
+        Phi                     % current stimulus orientation
+        trials                  % number of staircase trials
+        OD_0                    % baseline OD
+        OD                      % OD of current trial
+        mean_JND                % JND (average over trials)
         
         % auxiliary
         counter                 % keeps track of correct responses
@@ -93,7 +97,9 @@ classdef RM < handle
             addOptional(p,'eta',1.5e-9);
             addOptional(p,'t_sim',.5);
             addOptional(p,'tau',15e-3);
+            addOptional(p,'trials',480);
             addOptional(p,'OD',7.5);
+            
             
             p.parse(varargin{:});
             
@@ -118,11 +124,13 @@ classdef RM < handle
             self.eta        = p.Results.eta;
             self.tau        = p.Results.tau;
             self.t_sim      = p.Results.t_sim;
+            self.trials     = p.Results.trials;
             
             self.OD_0       = p.Results.OD;
             self.OD         = self.OD_0;
             self.Theta      = linspace(-90,90,self.N)';
-            self.Phi        = [];
+            self.Phi_0      = 135;
+            self.Phi        = self.Phi_0;
             self.mean_JND   =  0;
             self.W_0        = (self.Cprob(meshgrid(self.Theta)...
                                 -meshgrid(self.Theta)',...
@@ -133,7 +141,7 @@ classdef RM < handle
             self.W          = self.W_0;
             self.S          = ones(self.N);
             self.counter    =   0;
-            self.trials     = 480; 
+            
         end
         
         % fixing connections
@@ -141,25 +149,43 @@ classdef RM < handle
            self.S           = double(rand(self.N)>p); 
         end
         
-        % resetting weights
-        function reset_weights(self)
+        % resetting the model
+        function reset(self)
             self.W          = self.W_0;
+            self.OD         = self.OD_0;
         end
         
-        % resetting orientation difference
+        % setting orientation difference
         function set_OD(self,varargin)
             p               = inputParser;
-            addOptional(p,'od',[]);
+            addOptional(p,'OD',[]);
             p.parse(varargin{:});
-            od              = p.Results.od;
+            od              = p.Results.OD;
             if ~isempty(od)
                 self.OD         = od;
             else
                 self.OD         = self.OD_0;
             end
-            
         end
-            
+        
+        % setting reference orientation (phi)
+        function set_PHI(self,varargin)
+            p               = inputParser;
+            addOptional(p,'PHI',[]);
+            p.parse(varargin{:});
+            phi             = p.Results.PHI;
+            if ~isempty(phi)
+                self.Phi    = phi;
+            else
+                self.Phi    = self.Phi_0;
+            end
+        end
+        
+        % getting just noticeable difference
+        function out = get_JND(self)
+            out             = self.mean_JND;
+        end
+        
         % simulation of training session
         function session(self)
             self.V          = zeros(self.N,1);
