@@ -87,7 +87,7 @@ for r=1:Reps
     Q{1}.set_PHI(135);
     Q{3}.set_PHI(135);
     for s=1:Sessions
-        Q{1}.session();Q{1}.get_JND
+        Q{1}.session();
         Q{3}.session();
         Exp{1}.Ab(r,s)    = Q{1}.get_JND;
         Exp{3}.Ab(r,s)    = Q{3}.get_JND;
