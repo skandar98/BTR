@@ -1,3 +1,4 @@
+# Description
 A recurrent model of V1 orientation tuning (Teich & Quian 2003) outfitted with a dynamic anti-Hebbian learning mechanism as described in:
 Lange, Senden, Radermacher, and De Weerd (submitted). Learning multiple skills reveals competition rather than consolidation.
 
@@ -11,4 +12,6 @@ The latest version may always be found here.
 This software requires MATLAB R2015a or later. It was developed with access to the full suite of MATLAB add-on packages.
 Some of these packages may be required to run the software.
 
+# References
+Teich AF, Qian N. Comparison Among Some Models of Orientation Selectivity. Journal of Neurophysiology. 2003; 89(4).
 
