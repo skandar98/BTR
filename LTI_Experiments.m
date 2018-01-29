@@ -2,8 +2,9 @@
 %%%     author: Mario Senden (mario.senden@maastrichtuniversity.nl)     %%%
 
 % This is a reference implementation of the simulation experiments
-% described in: Lange G, Senden M, Radermacher A, De Weerd P. Learning 
-% multiple skills reveals competition rather than consolidation (submitted).
+% described in: Lange G, Senden M, Radermacher A, De Weerd P. 
+% Interference  with highly trained skills reveals  competition 
+% rather than consolidation (submitted).
 clear all;close all;clc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

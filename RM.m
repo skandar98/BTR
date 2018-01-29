@@ -25,8 +25,9 @@ classdef RM < handle
 % 
 % rm = RM() creates an instance of the recurrent model of perceptual
 % learning in early visual cortex using standard parameter values 
-% see: Lange G, Senden M, Radermacher A, De Weerd P. Learning 
-% multiple skills reveals competition rather than consolidation (submitted).
+% see: Lange G, Senden M, Radermacher A, De Weerd P. 
+% Interference  with highly trained skills reveals  competition 
+% rather than consolidation (submitted).
 % 
 % Use rm.set_OD(x) to set orientation difference to value 'x'; if no value
 %     is provided, OD will be reset to its baseline state (7.5 unless
