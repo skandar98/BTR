@@ -58,14 +58,14 @@ classdef RM < handle
         c_i                     % normalization inhibitory connections
         k                       % scaling of variance
         C                       % decision criterion
-        eta                     % learning rate
+        eta                     % gobal learning rate
+        Eta                     % learning rate per connection
         t_sim                   % simulation time
         tau                     % membrane time constant
         Theta                   % preferred orientation of each neuron
         V_0                     % baseline membrane potential
         W_0                     % baseline connectivity    
         W                       % connection weight matrix
-        S                       % selected connections
         
         % experimental setup
         Phi_0                   % baseline stimulus orientation
@@ -123,6 +123,7 @@ classdef RM < handle
             self.k          = p.Results.k;
             self.C          = p.Results.C;
             self.eta        = p.Results.eta;
+            self.Eta        = self.eta*ones(self.N);
             self.tau        = p.Results.tau;
             self.t_sim      = p.Results.t_sim;
             self.trials     = p.Results.trials;
@@ -136,7 +137,6 @@ classdef RM < handle
                                 -meshgrid(self.Theta)',...
                                 self.a_i,self.c_i));
             self.W          = self.W_0;
-            self.S          = ones(self.N);
             self.Phi_0      = 135;
             self.Phi        = self.Phi_0;
             self.OD_0       = p.Results.OD;
@@ -145,14 +145,16 @@ classdef RM < handle
             
         end
         
-        % fixing connections
-        function fix(self,p)
-           self.S           = double(rand(self.N)>p); 
+        % decay of learning rate
+        function decay(self,lambda)
+           dW               = (self.W_0-self.W)./self.W_0;
+           self.Eta         = self.eta*ones(self.N).*exp(-lambda*dW);
         end
         
         % resetting the model
         function reset(self)
             self.W          = self.W_0;
+            self.Eta        = self.eta*ones(self.N);
             self.OD         = self.OD_0;
         end
         
@@ -226,7 +228,7 @@ classdef RM < handle
             correct         = mean(p>rand(self.N,1))>=self.C;
             
             if ~correct
-                dW              = self.eta*self.S.*(r*r');
+                dW              = self.Eta.*(r*r');
                 self.W          = self.W-dW;
                 self.OD         = self.OD*1.2;
                 self.counter    = 1;
