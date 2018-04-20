@@ -29,9 +29,9 @@ a_e         =    2.2;       % exponent exc. connections
 a_i         =    1.4;       % exponent inh. connections
 c_e         =    1.2025e-3; % normalization exc. connection
 c_i         =    1.6875e-3; % normalization inh. connection
-k           =    1.47;      % scaling of variance
+k           =    4;         % scaling of variance (3 has been tested; 4 works well)
 C           =        .53;   % decision criterion
-eta         =    1.5e-9;    % learning rate
+eta         =    1.5e-11;   % learning rate
 t_sim       =     .5;       % simulation time (seconds)
 tau         =    1.5e-2;    % membrane time constant (seconds)
 
