@@ -183,3 +183,10 @@ xlabel('session')
 title('Experiment 3 (ACA)')
 legend('A_B','A_T')
 legend('boxoff')
+
+print (Name,'-dsvg')
+print (Name,'-dpng')
+close all
+
+Name = sprintf('results_lambda_%d%',lambda);
+save(Name,'Exp','Q')
