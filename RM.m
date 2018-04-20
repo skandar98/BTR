@@ -62,7 +62,7 @@ classdef RM < handle
         t_sim                   % simulation time
         tau                     % membrane time constant
         Theta                   % preferred orientation of each neuron
-        V                       % membrane potential
+        V_0                     % baseline membrane potential
         W_0                     % baseline connectivity    
         W                       % connection weight matrix
         S                       % selected connections
@@ -93,9 +93,9 @@ classdef RM < handle
             addOptional(p,'a_i',1.4);
             addOptional(p,'c_e',1.2025e-3);
             addOptional(p,'c_i',1.6875e-3);
-            addOptional(p,'k',1.47);
+            addOptional(p,'k',4);
             addOptional(p,'C',.53);
-            addOptional(p,'eta',1.5e-9);
+            addOptional(p,'eta',1.5e-11);
             addOptional(p,'t_sim',.5);
             addOptional(p,'tau',15e-3);
             addOptional(p,'trials',480);
@@ -126,13 +126,9 @@ classdef RM < handle
             self.tau        = p.Results.tau;
             self.t_sim      = p.Results.t_sim;
             self.trials     = p.Results.trials;
-            
-            self.OD_0       = p.Results.OD;
-            self.OD         = self.OD_0;
             self.Theta      = linspace(-90,90,self.N)';
-            self.Phi_0      = 135;
-            self.Phi        = self.Phi_0;
             self.mean_JND   =  0;
+            self.V_0        = zeros(self.N,1);
             self.W_0        = (self.Cprob(meshgrid(self.Theta)...
                                 -meshgrid(self.Theta)',...
                                 self.a_e,self.c_e)...
@@ -141,6 +137,10 @@ classdef RM < handle
                                 self.a_i,self.c_i));
             self.W          = self.W_0;
             self.S          = ones(self.N);
+            self.Phi_0      = 135;
+            self.Phi        = self.Phi_0;
+            self.OD_0       = p.Results.OD;
+            self.OD         = self.OD_0;
             self.counter    =   0;
             
         end
@@ -189,7 +189,6 @@ classdef RM < handle
         
         % simulation of training session
         function session(self)
-            self.V          = zeros(self.N,1);
             self.mean_JND   = 0;
             self.counter    = 0;
             for t=1:self.trials
@@ -208,18 +207,18 @@ classdef RM < handle
                                 /(2*self.sigma_ff^2));
             [~,v]           = ode45(@(t,v)self.dV(v,V_ff,...
                                 self.W,self.alpha,self.tau),...
-                                [0 self.t_sim],self.V);
-            self.V          = v(end,:)';
-            M_ref           = self.alpha*max(self.V,0)*self.t_sim;  
+                                [0 self.t_sim],self.V_0);
+            r               = self.alpha*max(v(end,:),0)';
+            M_ref           = r*self.t_sim;  
             Phi_probe       = self.Phi+((rand()>.5)*2-1)*self.OD;
             V_ff            = self.J_ff*exp(...
                                 -((self.Adiff(self.Theta,Phi_probe)).^2)...
                                 /(2*self.sigma_ff^2));
             [~,v]           = ode45(@(t,v)self.dV(v,V_ff,...
                                 self.W,self.alpha,self.tau),...
-                                [0 self.t_sim],self.V);              
-            self.V          = v(end,:)';
-            M_probe         = self.alpha*max(self.V,0)*self.t_sim;                                
+                                [0 self.t_sim],self.V_0);              
+            r               = self.alpha*max(v(end,:),0)';
+            M_probe         = r*self.t_sim;                                
             D               = abs(M_ref-M_probe)./...
                                 ((self.k*(M_ref+M_probe)).^.5);
             p               = .5*erfc(-D/(2^.5));
@@ -227,7 +226,7 @@ classdef RM < handle
             correct         = mean(p>rand(self.N,1))>=self.C;
             
             if ~correct
-                dW              = self.eta*self.S.*(self.V*self.V');
+                dW              = self.eta*self.S.*(r*r');
                 self.W          = self.W-dW;
                 self.OD         = self.OD*1.2;
                 self.counter    = 1;
