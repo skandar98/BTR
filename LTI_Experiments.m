@@ -14,7 +14,7 @@ OD_0        =   7.5;        % initial orientation difference
 Sessions    =   8;          % number of sessions
 Reps        =  25;          % number of times each experiment is repeated
 Trials      = 480;          % number of trials per session
-P           =   0.;         % separability (proportion)
+lambda      =   0.;         % decay rate
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -68,18 +68,6 @@ end
 % Exp1  (blue:  135°    ->      105° & 165°      -> 135°)
 % Exp2  (red:    //     ->      105° & 165°      -> 135°)
 % Exp3  (green: 135°    ->          45°          -> 135°)
-% 
-% Separability is implemented as follows:
-% In experiment 1, a proportion (P) of connection changes as a consequence
-% of training in part 1 (at 135°) will be fixed and thus not undergo
-% changes in response to training at (potentially) interfering
-% orientations in part 2.
-% 
-% In experiment 2, a proportion (P) of connection weights will be fixed
-% prior to part 2 such that they are not recruited by training at 
-% (potentially) interfering orientations. These weights will subsequently 
-% become malleable prior to part 3. These weights were thus 'reserved' for
-% training at 135°.
 
 
 for r=1:Reps
@@ -101,8 +89,9 @@ for r=1:Reps
     Q{1}.set_OD();
     Q{2}.set_OD();
     Q{3}.set_OD();
-    Q{1}.fix(P);     
-    Q{2}.fix(P);
+    Q{1}.decay(lambda);     
+    Q{2}.decay(lambda);
+    Q{3}.decay(lambda);
     for s=1:Sessions
         Q{1}.session();
         Q{2}.session();
@@ -126,8 +115,9 @@ for r=1:Reps
     Q{1}.set_OD(Exp{1}.Ab(r,end));
     Q{2}.set_OD();
     Q{3}.set_OD(Exp{3}.Ab(r,end));
-    Q{1}.fix(0);
-    Q{2}.fix(0);
+    Q{1}.decay(lambda);     
+    Q{2}.decay(lambda);
+    Q{3}.decay(lambda);
     for s=1:Sessions
         Q{1}.session();
         Q{2}.session();
@@ -146,7 +136,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                             plotting                                %%%
 
-Name        = sprintf('separability = %d%%',P*100);
+Name        = sprintf('lambda = %d%',lambda);
 Pos         = [200 200  950 350];
 
 figure('Color','w','Position' ,Pos,'name',Name)
