@@ -147,7 +147,7 @@ classdef RM < handle
         
         % decay of learning rate
         function decay(self,lambda)
-           dW               = (self.W_0-self.W)./self.W_0;
+           dW               = (self.W_0-self.W)./abs(self.W_0);
            self.Eta         = self.eta*ones(self.N).*exp(-lambda*dW);
         end
         
