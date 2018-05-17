@@ -60,12 +60,14 @@ classdef RM < handle
         C                       % decision criterion
         eta                     % gobal learning rate
         Eta                     % learning rate per connection
+        mu                      % exponent of power law weight dependence
         t_sim                   % simulation time
         tau                     % membrane time constant
         Theta                   % preferred orientation of each neuron
         V_0                     % baseline membrane potential
-        W_0                     % baseline connectivity    
-        W                       % connection weight matrix
+        W_exc                   % excitatory lateral connectivity
+        W_inh                   % inhibitory lateral connectivity
+        
         
         % experimental setup
         Phi_0                   % baseline stimulus orientation
@@ -96,6 +98,7 @@ classdef RM < handle
             addOptional(p,'k',4);
             addOptional(p,'C',.53);
             addOptional(p,'eta',1.5e-11);
+            addOptional(p,'mu',0);
             addOptional(p,'t_sim',.5);
             addOptional(p,'tau',15e-3);
             addOptional(p,'trials',480);
@@ -124,25 +127,24 @@ classdef RM < handle
             self.C          = p.Results.C;
             self.eta        = p.Results.eta;
             self.Eta        = self.eta*ones(self.N);
+            self.mu         = p.Results.mu;
             self.tau        = p.Results.tau;
             self.t_sim      = p.Results.t_sim;
             self.trials     = p.Results.trials;
             self.Theta      = linspace(-90,90,self.N)';
             self.mean_JND   =  0;
             self.V_0        = zeros(self.N,1);
-            self.W_0        = (self.Cprob(meshgrid(self.Theta)...
+            self.W_exc      = self.Cprob(meshgrid(self.Theta)...
                                 -meshgrid(self.Theta)',...
-                                self.a_e,self.c_e)...
-                                -self.Cprob(meshgrid(self.Theta)...
+                                self.a_e,self.c_e);
+            self.W_inh      = self.Cprob(meshgrid(self.Theta)...
                                 -meshgrid(self.Theta)',...
-                                self.a_i,self.c_i));
-            self.W          = self.W_0;
+                                self.a_i,self.c_i);
             self.Phi_0      = 135;
             self.Phi        = self.Phi_0;
             self.OD_0       = p.Results.OD;
             self.OD         = self.OD_0;
             self.counter    =   0;
-            
         end
         
         % decay of learning rate
@@ -153,7 +155,9 @@ classdef RM < handle
         
         % resetting the model
         function reset(self)
-            self.W          = self.W_0;
+            self.W_exc      = self.Cprob(meshgrid(self.Theta)...
+                                -meshgrid(self.Theta)',...
+                                self.a_e,self.c_e);
             self.Eta        = self.eta*ones(self.N);
             self.OD         = self.OD_0;
         end
@@ -204,11 +208,12 @@ classdef RM < handle
     methods (Access = private)
         % simulation of individual trial
         function trial(self)
+            W               = self.W_exc-self.W_inh;
             V_ff            = self.J_ff*exp(...
                                 -((self.Adiff(self.Theta,self.Phi)).^2)...
                                 /(2*self.sigma_ff^2));
             [~,v]           = ode45(@(t,v)self.dV(v,V_ff,...
-                                self.W,self.alpha,self.tau),...
+                                W,self.alpha,self.tau),...
                                 [0 self.t_sim],self.V_0);
             r               = self.alpha*max(v(end,:),0)';
             M_ref           = r*self.t_sim;  
@@ -217,7 +222,7 @@ classdef RM < handle
                                 -((self.Adiff(self.Theta,Phi_probe)).^2)...
                                 /(2*self.sigma_ff^2));
             [~,v]           = ode45(@(t,v)self.dV(v,V_ff,...
-                                self.W,self.alpha,self.tau),...
+                                W,self.alpha,self.tau),...
                                 [0 self.t_sim],self.V_0);              
             r               = self.alpha*max(v(end,:),0)';
             M_probe         = r*self.t_sim;                                
@@ -228,8 +233,10 @@ classdef RM < handle
             correct         = mean(p>rand(self.N,1))>=self.C;
             
             if ~correct
-                dW              = self.Eta.*(r*r');
-                self.W          = self.W-dW;
+                dW_exc          = self.eta*((self.W_exc/...
+                                    (self.c_e*2^self.a_e)).^self.mu).*...
+                                    (r*r');
+                self.W_exc      = self.W_exc-dW_exc;
                 self.OD         = self.OD*1.2;
                 self.counter    = 1;
             else
