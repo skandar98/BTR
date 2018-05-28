@@ -147,17 +147,11 @@ classdef RM < handle
             self.counter    =   0;
         end
         
-        % decay of learning rate
-        function decay(self,lambda)
-           dW               = (self.W_0-self.W)./abs(self.W_0);
-           self.Eta         = self.eta*ones(self.N).*exp(-lambda*dW);
-        end
-        
         % resetting the model
         function reset(self)
-            self.W_exc      = self.Cprob(meshgrid(self.Theta)...
+            self.W_inh      = self.Cprob(meshgrid(self.Theta)...
                                 -meshgrid(self.Theta)',...
-                                self.a_e,self.c_e);
+                                self.a_i,self.c_i);
             self.Eta        = self.eta*ones(self.N);
             self.OD         = self.OD_0;
         end
@@ -233,10 +227,10 @@ classdef RM < handle
             correct         = mean(p>rand(self.N,1))>=self.C;
             
             if ~correct
-                dW_exc          = self.eta*((self.W_exc/...
-                                    (self.c_e*2^self.a_e)).^self.mu).*...
+                dW_inh          = self.eta*((self.W_inh/...
+                                    (self.c_i*2^self.a_i)).^self.mu).*...
                                     (r*r');
-                self.W_exc      = self.W_exc-dW_exc;
+                self.W_inh      = self.W_inh+dW_inh;
                 self.OD         = self.OD*1.2;
                 self.counter    = 1;
             else

@@ -14,7 +14,7 @@ OD_0        =   7.5;        % initial orientation difference
 Sessions    =   8;          % number of sessions
 Reps        =  25;          % number of times each experiment is repeated
 Trials      = 480;          % number of trials per session
-Lambda      = [0,2,4,8,16,32];
+Mu          = 0:.1:1;       % exponent
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -29,7 +29,7 @@ a_e         =    2.2;       % exponent exc. connections
 a_i         =    1.4;       % exponent inh. connections
 c_e         =    1.2025e-3; % normalization exc. connection
 c_i         =    1.6875e-3; % normalization inh. connection
-k           =    4;         % scaling of variance (3 has been tested; 4 works well)
+k           =    4;         % scaling of variance 
 C           =        .53;   % decision criterion
 eta         =    1.4e-11;   % learning rate
 t_sim       =     .5;       % simulation time (seconds)
@@ -38,7 +38,8 @@ tau         =    1.5e-2;    % membrane time constant (seconds)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                                 setup                               %%%
-
+for m=1:10
+    fprintf('\n mu = %.3f',Mu(end-m))
 for i=1:3
     Q{i}         = RM(...    % create a model for each of three quadrants
         N,...   % (i.e. experiments)
@@ -53,12 +54,15 @@ for i=1:3
         k,...
         C,...
         eta,...
+        Mu(end-m),...
         t_sim,...
         tau,...
         Trials,...
         OD_0);
     Exp{i}.Ab    = zeros(Reps,Sessions);
     Exp{i}.At    = zeros(Reps,Sessions);
+    Int{i}.left  = zeros(Reps,Sessions);
+    Int{i}.right = zeros(Reps,Sessions);
 end
 
 
@@ -68,8 +72,7 @@ end
 % Exp1  (blue:  135°    ->      105° & 165°      -> 135°)
 % Exp2  (red:    //     ->      105° & 165°      -> 135°)
 % Exp3  (green: 135°    ->          45°          -> 135°)
-for l=5:6
-    fprintf('\n lambda = %d',Lambda(l))
+
     for r=1:Reps
         fprintf('\n - participant %.2d',r)
         % part 1 (135° - baseline)
@@ -78,8 +81,8 @@ for l=5:6
         for s=1:Sessions
             Q{1}.session();
             Q{3}.session();
-            Exp{1}.Ab(r,s)    = Q{1}.get_JND;
-            Exp{3}.Ab(r,s)    = Q{3}.get_JND;
+            Exp{1}.Ab(r,s)  = Q{1}.get_JND;
+            Exp{3}.Ab(r,s)  = Q{3}.get_JND;
         end
         
         % part 2a (105° & 45° - interference)
@@ -89,13 +92,13 @@ for l=5:6
         Q{1}.set_OD();
         Q{2}.set_OD();
         Q{3}.set_OD();
-        Q{1}.decay(Lambda(l));
-        Q{2}.decay(Lambda(l));
-        Q{3}.decay(Lambda(l));
         for s=1:Sessions
             Q{1}.session();
             Q{2}.session();
             Q{3}.session();
+            Int{1}.left     = Q{1}.get_JND;
+            Int{2}.left     = Q{2}.get_JND;
+            Int{3}.left     = Q{3}.get_JND;
         end
         
         % part 2b (165° - interference)
@@ -103,12 +106,12 @@ for l=5:6
         Q{2}.set_PHI(165);
         Q{1}.set_OD();
         Q{2}.set_OD();
-        Q{1}.decay(Lambda(l));
-        Q{2}.decay(Lambda(l));
-        Q{3}.decay(Lambda(l));
         for s=1:Sessions
             Q{1}.session();
             Q{2}.session();
+            Int{1}.right    = Q{1}.get_JND;
+            Int{2}.right    = Q{2}.get_JND;
+
         end
         
         % part 3 (135° - test)
@@ -118,16 +121,13 @@ for l=5:6
         Q{1}.set_OD(Exp{1}.Ab(r,end));
         Q{2}.set_OD();
         Q{3}.set_OD(Exp{3}.Ab(r,end));
-        Q{1}.decay(Lambda(l));
-        Q{2}.decay(Lambda(l));
-        Q{3}.decay(Lambda(l));
         for s=1:Sessions
             Q{1}.session();
             Q{2}.session();
             Q{3}.session();
-            Exp{1}.At(r,s)    = Q{1}.get_JND;
-            Exp{2}.At(r,s)    = Q{2}.get_JND;
-            Exp{3}.At(r,s)    = Q{3}.get_JND;
+            Exp{1}.At(r,s)  = Q{1}.get_JND;
+            Exp{2}.At(r,s)  = Q{2}.get_JND;
+            Exp{3}.At(r,s)  = Q{3}.get_JND;
         end
         
         Q{1}.reset();
@@ -137,10 +137,12 @@ for l=5:6
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%                             plotting                                %%%
+    N_mu = uint8(Mu(end-m)*100);
+    Name = sprintf('results_inh_mu_%.3d%',N_mu);
+    save(Name,'Exp','Int','Q')
     
-    Name        = sprintf('Lambda(l) = %d%',Lambda(l));
+    Name        = sprintf('Mu = %.3d (inh)',N_mu);
     Pos         = [200 200  950 350];
-    
     figure('Color','w','Position' ,Pos,'name',Name)
     
     % experiment 1
@@ -185,12 +187,11 @@ for l=5:6
     title('Experiment 3 (ACA)')
     legend('A_B','A_T')
     legend('boxoff')
-    
+%     
     print (Name,'-dsvg')
     print (Name,'-dpng')
     close all
     
-    Name = sprintf('results_lambda_%d%',Lambda(l));
-    save(Name,'Exp','Q')
+    clear Q Exp
     
 end
