@@ -183,8 +183,25 @@ classdef RM < handle
         end
         
         % getting just noticeable difference
-        function out = get_JND(self)
-            out             = self.mean_JND;
+        function JND = get_JND(self)
+            JND             = self.mean_JND;
+        end
+        
+        function [We,Wi] = get_weights(self)
+            We              = self.W_exc;
+            Wi              = self.W_inh;
+        end
+        
+        function [v,r] = get_response(self)
+            W               = self.W_exc-self.W_inh;
+            V_ff            = self.J_ff*exp(...
+                                -((self.Adiff(self.Theta,self.Phi)).^2)...
+                                /(2*self.sigma_ff^2));
+            [~,v]           = ode45(@(t,v)self.dV(v,V_ff,...
+                                W,self.alpha,self.tau),...
+                                [0 self.t_sim],self.V_0);
+            v               = v(end,:)';
+            r               = self.alpha*max(v,0);
         end
         
         % simulation of training session
