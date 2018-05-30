@@ -3,5 +3,8 @@
 *.svg
 *.png
 *.zip
+plot_fig1.m
 anti_hebbian/
 hebbian/
+figure1_components/
+figures/
