@@ -26,8 +26,7 @@ classdef RM < handle
 % rm = RM() creates an instance of the recurrent model of perceptual
 % learning in early visual cortex using standard parameter values 
 % see: Lange G, Senden M, Radermacher A, De Weerd P. 
-% Interference  with highly trained skills reveals  competition 
-% rather than consolidation (submitted).
+% Interfering with a memory without disrupting its trace (submitted).
 % 
 % Use rm.set_OD(x) to set orientation difference to value 'x'; if no value
 %     is provided, OD will be reset to its baseline state (7.5 unless
@@ -134,10 +133,10 @@ classdef RM < handle
             self.Theta      = linspace(-90,90,self.N)';
             self.mean_JND   =  0;
             self.V_0        = zeros(self.N,1);
-            self.W_exc      = self.Cprob(meshgrid(self.Theta)...
+            self.W_exc      = self.J_rec * self.Cprob(meshgrid(self.Theta)...
                                 -meshgrid(self.Theta)',...
                                 self.a_e,self.c_e);
-            self.W_inh      = self.Cprob(meshgrid(self.Theta)...
+            self.W_inh      = self.J_rec * self.Cprob(meshgrid(self.Theta)...
                                 -meshgrid(self.Theta)',...
                                 self.a_i,self.c_i);
             self.Phi_0      = 135;
@@ -245,7 +244,7 @@ classdef RM < handle
             
             if ~correct
                 dW_inh          = self.eta*((1-self.W_inh/...
-                                    (self.c_i*2^self.a_i)).^self.mu).*...
+                                    (self.J_rec*self.c_i*2^self.a_i)).^self.mu).*...
                                     (r*r');
                 self.W_inh      = self.W_inh+dW_inh;
                 self.OD         = self.OD*1.2;
