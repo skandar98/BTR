@@ -8,3 +8,6 @@ anti_hebbian/
 hebbian/
 figure1_components/
 figures/
+Akaike.m
+get_weights.m
+plotting.m
