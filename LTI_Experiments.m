@@ -1,10 +1,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%     author: Mario Senden (mario.senden@maastrichtuniversity.nl)     %%%
 
-% This is a reference implementation of the simulation experiments
+% This is an implementation of the simulation experiments
 % described in: Lange G, Senden M, Radermacher A, De Weerd P.
-% Interference  with highly trained skills reveals  competition
-% rather than consolidation (submitted).
+% Interfering with a memory without disrupting its trace (submitted).
 clear all;close all;clc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -21,8 +20,8 @@ Mu       = 0:.1:1;          % exponent
 %%%                             parameters                              %%%
 
 N        = 512;             % number of neurons
-alpha    =  10;             % width of feedforward bias
-sigma_ff =  45;             % gain of spike encoder
+alpha    =  10;             % gain of spike encoder
+sigma_ff =  45;             % width of feedforward bias
 J_ff     =   0.5;           % forward connection strength
 J_rec    =   1;             % recurrent connection strength
 a_e      =   2.2;           % exponent exc. connections
