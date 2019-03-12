@@ -3,7 +3,7 @@
 
 % This is an implementation of the simulation experiments
 % described in: Lange G, Senden M, Radermacher A, De Weerd P.
-% Interfering with a memory without disrupting its trace (submitted).
+% Interfering with a memory without disrupting its trace? (submitted).
 clear all;close all;clc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -13,7 +13,6 @@ OD_0     =   7.5;           % initial orientation difference
 Sessions =   8;             % number of sessions
 Reps     =  25;             % number of times each experiment is repeated
 Trials   = 480;             % number of trials per session
-Mu       = 0:.1:1;          % exponent
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -31,7 +30,7 @@ c_i      =   1.6875e-3;     % normalization inh. connection
 k        =   4;             % scaling of variance
 C        =   0.53;          % decision criterion
 eta      =   1.4e-11;       % learning rate
-mu       =   1;             % exponent of power law weight dependence
+mu       =   0;             % exponent of power law weight dependence
 t_sim    =   0.5;           % simulation time (seconds)
 tau      =   1.5e-2;        % membrane time constant (seconds)
 
@@ -136,13 +135,9 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                             plotting                                %%%
-N_mu = uint8(Mu(end-m)*100);
-Name = sprintf('results_inh_mu_%.3d%',N_mu);
-save(Name,'Exp','Int','Q')
 
-Name        = sprintf('Mu = %.3d (inh)',N_mu);
-Pos         = [200 200  950 350];
-figure('Color','w','Position' ,Pos,'name',Name)
+Pos = [200 200  950 350];
+figure('Color','w','Position' ,Pos)
 
 % experiment 1
 subplot(1,3,1,'Fontsize',9)
@@ -186,9 +181,3 @@ xlabel('session')
 title('Experiment 3 (ACA)')
 legend('A_B','A_T')
 legend('boxoff')
-
-print (Name,'-dsvg')
-print (Name,'-dpng')
-close all
-
-clear Q Exp
