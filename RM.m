@@ -36,6 +36,8 @@ classdef RM < handle
 %     specified otherwise during construction)
 % Use rm.fix(P) to fix a proportion 'P' of connection weights.
 % Use rm.get_JND() to read out the current JND
+% Use rm.get_weights() to retrieve excitatory and inhibitory weights
+% Use rm.get_response() to read membrane potentials and firing rates
 % Use rm.session() to simulate a single session of staircase experiment. 
 % Use rm.reset() to restore the model to its naive state.
 
