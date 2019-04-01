@@ -11,7 +11,7 @@ clear all;close all;clc
 
 OD_0     =   7.5;           % initial orientation difference
 Sessions =   8;             % number of sessions
-Reps     =  25;             % number of times each experiment is repeated
+Reps     =   4;             % number of times each experiment is repeated
 Trials   = 480;             % number of trials per session
 
 
@@ -38,7 +38,7 @@ tau      =   1.5e-2;        % membrane time constant (seconds)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                                 setup                               %%%
 
-for i=1:3
+for i=1:4
     Q{i}         = RM(...   % create a model for each of three quadrants
         N,...               % (i.e. experiments)
         alpha,...
@@ -57,10 +57,9 @@ for i=1:3
         tau,...
         Trials,...
         OD_0);
-    Exp{i}.Ab    = zeros(Reps,Sessions);
-    Exp{i}.At    = zeros(Reps,Sessions);
-    Int{i}.left  = zeros(Reps,Sessions);
-    Int{i}.right = zeros(Reps,Sessions);
+    Q{i}.set_PHI(135);
+    Exp{i}      = zeros(Reps,Sessions);
+    
 end
 
 
@@ -73,64 +72,21 @@ end
 
 for r=1:Reps
     fprintf('\n - participant %.2d',r)
-    % part 1 (135° - baseline)
-    Q{1}.set_PHI(135);
-    Q{3}.set_PHI(135);
+    
+    Q{2}.set_CORRECT(0.5);
+    Q{3}.set_INCORRECT(0.5);
+    Q{4}.set_CORRECT(0.5);
+    Q{4}.set_INCORRECT(0.5);
     for s=1:Sessions
-        Q{1}.session();
-        Q{3}.session();
-        Exp{1}.Ab(r,s)  = Q{1}.get_JND;
-        Exp{3}.Ab(r,s)  = Q{3}.get_JND;
+        for i=1:4
+            Q{i}.session();
+            Exp{i}(r,s)  = Q{i}.get_JND;
+        end
     end
     
-    % part 2a (105° & 45° - interference)
-    Q{1}.set_PHI(105);
-    Q{2}.set_PHI(105);
-    Q{3}.set_PHI(45);
-    Q{1}.set_OD();
-    Q{2}.set_OD();
-    Q{3}.set_OD();
-    for s=1:Sessions
-        Q{1}.session();
-        Q{2}.session();
-        Q{3}.session();
-        Int{1}.left     = Q{1}.get_JND;
-        Int{2}.left     = Q{2}.get_JND;
-        Int{3}.left     = Q{3}.get_JND;
+    for i=1:4
+        Q{i}.reset();
     end
-    
-    % part 2b (165° - interference)
-    Q{1}.set_PHI(165);
-    Q{2}.set_PHI(165);
-    Q{1}.set_OD();
-    Q{2}.set_OD();
-    for s=1:Sessions
-        Q{1}.session();
-        Q{2}.session();
-        Int{1}.right    = Q{1}.get_JND;
-        Int{2}.right    = Q{2}.get_JND;
-        
-    end
-    
-    % part 3 (135° - test)
-    Q{1}.set_PHI(135);
-    Q{2}.set_PHI(135);
-    Q{3}.set_PHI(135);
-    Q{1}.set_OD(Exp{1}.Ab(r,end));
-    Q{2}.set_OD();
-    Q{3}.set_OD(Exp{3}.Ab(r,end));
-    for s=1:Sessions
-        Q{1}.session();
-        Q{2}.session();
-        Q{3}.session();
-        Exp{1}.At(r,s)  = Q{1}.get_JND;
-        Exp{2}.At(r,s)  = Q{2}.get_JND;
-        Exp{3}.At(r,s)  = Q{3}.get_JND;
-    end
-    
-    Q{1}.reset();
-    Q{2}.reset();
-    Q{3}.reset();
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -140,44 +96,16 @@ Pos = [200 200  950 350];
 figure('Color','w','Position' ,Pos)
 
 % experiment 1
-subplot(1,3,1,'Fontsize',9)
 hold all
-plot(mean(Exp{1}.Ab),'color',[0 0 .75],'linestyle','--','linewidth',2.5)
-plot(mean(Exp{1}.At),'color',[0 0 .75],'linewidth',2.5)
+for i=1:4
+    plot(mean(Exp{i}),'color',[0 0 .75],'linewidth',2.5)
+end
 set(gca, 'XTick', 1:8)
 set(gca, 'YScale', 'log')
 xlim([0.5 8.5])
 ylim([1.5 8.5])
 xlabel('session')
 ylabel('JND (degree)')
-title('Experiment 1 (ABA)')
-legend('A_B','A_T')
-legend('boxoff')
-
-% experiment 2
-subplot(1,3,2,'Fontsize',9)
-hold all
-plot(mean(Exp{1}.Ab),'color',[0 0 .75],'linestyle','--','linewidth',2.5)
-plot(mean(Exp{2}.At),'color',[.75 0 0],'linewidth',2.5)
-set(gca, 'XTick', 1:8)
-set(gca, 'YScale', 'log')
-xlim([0.5 8.5])
-ylim([1.5 8.5])
-xlabel('session')
-title('Experiment 2 (BA)')
-legend('A_B','A_T')
-legend('boxoff')
-
-% experiment 3
-subplot(1,3,3,'Fontsize',9)
-hold all
-plot(mean(Exp{3}.Ab),'color',[0 .75 0],'linestyle','--','linewidth',2.5)
-plot(mean(Exp{3}.At),'color',[0 .75 0],'linewidth',2.5)
-set(gca, 'XTick', 1:8)
-set(gca, 'YScale', 'log')
-xlim([0.5 8.5])
-ylim([1.5 8.5])
-xlabel('session')
-title('Experiment 3 (ACA)')
-legend('A_B','A_T')
+title('probabilistic feedback on')
+legend('neither trials','incorrect trials', 'correct trials', 'both trials')
 legend('boxoff')
