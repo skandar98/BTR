@@ -261,7 +261,7 @@ classdef RM < handle
             correct         = mean(p>rand(self.N,1))>=self.C;
             
             if ~correct
-                if rand() < (1 - p_correct)
+                if rand() < (1 - self.p_correct)
                     dW_inh          = self.eta*((1-self.W_inh/...
                         (self.J_rec*self.c_i*2^self.a_i)).^self.mu).*...
                         (r*r');
@@ -270,7 +270,7 @@ classdef RM < handle
                 self.OD         = self.OD*1.2;
                 self.counter    = 1;
             else
-                if rand() < p_incorrect
+                if rand() < self.p_incorrect
                     dW_inh          = self.eta*((1-self.W_inh/...
                         (self.J_rec*self.c_i*2^self.a_i)).^self.mu).*...
                         (r*r');

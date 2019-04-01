@@ -13,6 +13,7 @@ OD_0     =   7.5;           % initial orientation difference
 Sessions =   8;             % number of sessions
 Reps     =   4;             % number of times each experiment is repeated
 Trials   = 480;             % number of trials per session
+P        = 0.75;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -66,17 +67,18 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                             experiments                             %%%
 
-% Exp1  (blue:  135°    ->      105° & 165°      -> 135°)
-% Exp2  (red:    //     ->      105° & 165°      -> 135°)
-% Exp3  (green: 135°    ->          45°          -> 135°)
+% Exp1  (correct = 0; incorrect = 0)
+% Exp2  (correct = P; incorrect = 0)
+% Exp3  (correct = 0; incorrect = P)
+% Exp4  (correct = P; incorrect = P)
 
 for r=1:Reps
     fprintf('\n - participant %.2d',r)
     
-    Q{2}.set_CORRECT(0.5);
-    Q{3}.set_INCORRECT(0.5);
-    Q{4}.set_CORRECT(0.5);
-    Q{4}.set_INCORRECT(0.5);
+    Q{2}.set_CORRECT(P);
+    Q{3}.set_INCORRECT(P);
+    Q{4}.set_CORRECT(P);
+    Q{4}.set_INCORRECT(P);
     for s=1:Sessions
         for i=1:4
             Q{i}.session();
@@ -84,8 +86,12 @@ for r=1:Reps
         end
     end
     
+    
+    
     for i=1:4
+        [We_trained{i},Wi_trained{i}] = Q{i}.get_weights();
         Q{i}.reset();
+        [We{i},Wi{i}] = Q{i}.get_weights();
     end
 end
 
@@ -97,9 +103,10 @@ figure('Color','w','Position' ,Pos)
 
 % experiment 1
 hold all
-for i=1:4
-    plot(mean(Exp{i}),'color',[0 0 .75],'linewidth',2.5)
-end
+plot(mean(Exp{1}),'color',[0 0 .75],'linewidth',2.5)
+plot(mean(Exp{2}),'color',[.75 0 0],'linewidth',2.5)
+plot(mean(Exp{3}),'color',[0 .75 0],'linewidth',2.5)
+plot(mean(Exp{4}),'color',[.75 .75 0],'linewidth',2.5)
 set(gca, 'XTick', 1:8)
 set(gca, 'YScale', 'log')
 xlim([0.5 8.5])
@@ -109,3 +116,6 @@ ylabel('JND (degree)')
 title('probabilistic feedback on')
 legend('neither trials','incorrect trials', 'correct trials', 'both trials')
 legend('boxoff')
+
+%%
+
