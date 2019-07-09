@@ -3,7 +3,7 @@
 
 % This is an implementation of the simulation experiments
 % described in: Lange G, Senden M, Radermacher A, De Weerd P.
-% Interfering with a memory without disrupting its trace (submitted).
+% Interfering with a memory without erasing its trace (submitted).
 clear all;close all;clc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
