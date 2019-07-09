@@ -3,6 +3,7 @@
 *.svg
 *.png
 *.zip
+testing.m
 plot_fig1.m
 anti_hebbian/
 hebbian/
