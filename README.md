@@ -1,4 +1,10 @@
 # Description
+
+![](https://img.shields.io/github/issues/ccnmaastricht/LTI)
+![](https://img.shields.io/github/forks/ccnmaastricht/LTI)
+![](https://img.shields.io/github/stars/ccnmaastricht/LTI)
+![](https://img.shields.io/github/license/ccnmaastricht/LTI)
+
 A recurrent model of V1 orientation tuning (Teich & Quian 2003) outfitted with a dynamic,
 error-triggered, Hebbian learning mechanism as described in:
 Lange, G., Senden, M., Radermacher, A., & De Weerd, P. (2020). Interfering with a memory without erasing its trace. Neural Networks, 121, 339–355. https://doi.org/10.1016/j.neunet.2019.09.027
@@ -24,4 +30,3 @@ Some of these packages may be required to run the software.
 
 # References
 Teich AF, Qian N. Comparison Among Some Models of Orientation Selectivity. Journal of Neurophysiology. 2003; 89(4).
-
