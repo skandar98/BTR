@@ -4,7 +4,6 @@
 ![](https://img.shields.io/github/issues/ccnmaastricht/LTI)
 ![](https://img.shields.io/github/forks/ccnmaastricht/LTI)
 ![](https://img.shields.io/github/stars/ccnmaastricht/LTI)
-![](https://img.shields.io/github/license/ccnmaastricht/LTI)
 
 A recurrent model of V1 orientation tuning (Teich & Quian 2003) outfitted with a dynamic,
 error-triggered, Hebbian learning mechanism as described in:
