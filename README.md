@@ -1,5 +1,6 @@
 # Description
 
+![](https://img.shields.io/github/license/ccnmaastricht/LTI)
 ![](https://img.shields.io/github/issues/ccnmaastricht/LTI)
 ![](https://img.shields.io/github/forks/ccnmaastricht/LTI)
 ![](https://img.shields.io/github/stars/ccnmaastricht/LTI)
