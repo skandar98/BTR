@@ -1,15 +1,18 @@
 clear;close all;clc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%                             settings                                %%%
+%%                               settings                                 %
+
+path ="\BTR\FPAnalysis\simulation_results\";
+
 
 OD_0     =   4.5;           % initial orientation difference
 Sessions =   4;             % number of sessions
-Reps     =   2;             % number of times each experiment is repeated
-Trials   = 50;             % number of trials per session
+Reps     =   1;             % number of times each experiment is repeated
+Trials   = 50;              % number of trials per session
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%                             parameters                              %%%
+%%                              parameters                                %
 
 N        = 512;             % number of neurons
 alpha    =  10;             % gain of spike encoder
@@ -28,7 +31,7 @@ t_sim    =   0.5;           % simulation time (seconds)
 tau      =   1.5e-2;        % membrane time constant (seconds)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%                                 setup                               %%%
+%%                                setup                                   %
 
 
 
@@ -54,34 +57,49 @@ Q= RM(...   % create a model for each of three quadrants
 Exp.Ab = zeros(Reps,Sessions);
 Exp.At = zeros(Reps,Sessions);
 Int = zeros(Reps, Sessions);
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                              simulate                                 %%
+W = zeros(512, 512, Sessions*3);
+rate = zeros(512, Sessions*3);
+V_rec = zeros(512, Sessions*3);
+V_ff = zeros(512, Sessions*3);
 tic
 for r=1:Reps
     Q.set_PHI(135);
     for s=1:Sessions
-        Q.session();
+        W(:,:,s) = Q.session();
+        [V_ff(:,s), V_rec(:,s), rate(:,s)]= Q.get_response();
         Exp.Ab(r, s) = Q.get_JND * 2;
+
     end
     
-    Q.set_PHI(45);
-    Q.set_OD();
-    for s=1:Sessions
-        Q.session();
-        Int(r, s) = Q.get_JND * 2;
-    end
-    
-    Q.set_PHI(135);
-    Q.set_OD();
-    for s=1:Sessions
-        Q.session();
-        Exp.At(r, s) = Q.get_JND * 2;
-    end
-    
+     Q.set_PHI(45);
+     Q.set_OD();
+     
+     for s=1:Sessions
+          W(:,:,s+Sessions) = Q.session();
+          [V_ff(:,s+Sessions), V_rec(:,s+Sessions), rate(:,s)]= Q.get_response();
+          Int(r, s) = Q.get_JND * 2;
+          V_ff(:,s+Sessions) 
+     end
+%     
+%     Q.set_PHI(135);
+%     Q.set_OD();
+%     for s=1:Sessions
+%         W(s) = Q.session();
+%         Exp.At(r, s) = Q.get_JND * 2;
+%     end
+%     
     Q.reset();
 end
 toc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%                             plotting                                %%%
+%%                                save                                   %%
+
+save(path+'inputs1.mat', 'W', 'rate', 'V_rec', "V_ff",'alpha','tau');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                              plotting                                 %%
 
 % Pos = [200 200  950 350];
 figure('Color','w')
