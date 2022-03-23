@@ -1,8 +1,8 @@
 clc; clear; close all;
 
 %declare input and output path
-path_in ="C:\Users\skand\OneDrive\Dokumentumok\MATLAB\BTR\FPAnalysis\simulation_results\";
-path_out = "C:\Users\skand\OneDrive\Dokumentumok\MATLAB\BTR\FPAnalysis\analysis_results\"; 
+path_in ="\BTR\FPAnalysis\simulation_results\";
+path_out = "\BTR\FPAnalysis\analysis_results\"; 
 
 %load input variables
 load(path_in+'inputs1.mat');
