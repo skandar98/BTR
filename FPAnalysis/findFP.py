@@ -5,7 +5,7 @@ import scipy.io as mat
 from minimization import Minimizer
 
 
-path = 'C:/Users/skand/OneDrive/Dokumentumok/MATLAB/BTR/FPAnalysis/simulation_results'
+path = 'BTR/FPAnalysis/simulation_results'
 inputs = mat.loadmat(path + '/inputs1.mat')
 
 session = 4
