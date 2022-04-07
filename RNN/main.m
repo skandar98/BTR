@@ -3,7 +3,7 @@ clear;close all;clc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                               settings                                 %
 
-path ="\BTR\FPAnalysis\simulation_results\";
+path ="C:\Users\skand\OneDrive\Dokumentumok\MATLAB\BTR\FPAnalysis\simulation_results\";
 
 
 OD_0     =   4.5;           % initial orientation difference
@@ -59,16 +59,17 @@ Exp.At = zeros(Reps,Sessions);
 Int = zeros(Reps, Sessions);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                              simulate                                 %%
-W = zeros(512, 512, Sessions*3);
-rate = zeros(512, Sessions*3);
-V_rec = zeros(512, Sessions*3);
-V_ff = zeros(512, Sessions*3);
+W = zeros(512, 512, Trials*Sessions,3);
+rate = zeros(512, Trials*Sessions,3);
+V_rec = zeros(512, 100, Trials*Sessions,3);
+V_ff = zeros(512, Trials*Sessions,3);
+C = zeros(Trials*Sessions,3);
 tic
 for r=1:Reps
     Q.set_PHI(135);
     for s=1:Sessions
-        W(:,:,s) = Q.session();
-        [V_ff(:,s), V_rec(:,s), rate(:,s)]= Q.get_response();
+        idx = (1+Trials*(s-1)):Trials*s;
+        [V_ff(:,idx,1), V_rec(:,:,idx,1), W(:,:,idx,1),C(idx,1)]= Q.session();
         Exp.Ab(r, s) = Q.get_JND * 2;
 
     end
@@ -77,26 +78,26 @@ for r=1:Reps
      Q.set_OD();
      
      for s=1:Sessions
-          W(:,:,s+Sessions) = Q.session();
-          [V_ff(:,s+Sessions), V_rec(:,s+Sessions), rate(:,s)]= Q.get_response();
+          idx = (1+Trials*(s-1)):Trials*s;
+          [V_ff(:,idx,2), V_rec(:,:,idx,2), W(:,:,idx,2),C(idx,2)]= Q.session();
           Int(r, s) = Q.get_JND * 2;
-          V_ff(:,s+Sessions) 
      end
-%     
-%     Q.set_PHI(135);
-%     Q.set_OD();
-%     for s=1:Sessions
-%         W(s) = Q.session();
-%         Exp.At(r, s) = Q.get_JND * 2;
-%     end
-%     
+    
+    Q.set_PHI(135);
+    Q.set_OD();
+    for s=1:Sessions
+        idx = (1+Trials*(s-1)):Trials*s;
+        [V_ff(:,idx,3), V_rec(:,:,idx,3), W(:,:,idx,3),C(idx,3)]= Q.session();
+        Exp.At(r, s) = Q.get_JND * 2;
+    end
+    
     Q.reset();
 end
 toc
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                                save                                   %%
 
-save(path+'inputs1.mat', 'W', 'rate', 'V_rec', "V_ff",'alpha','tau');
+save(path+'inputs2.mat', 'W', 'V_rec', "V_ff","C",'alpha','tau');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                              plotting                                 %%
