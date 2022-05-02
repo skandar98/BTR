@@ -1,91 +1,73 @@
 from cmath import tau
 import autograd.numpy as np
-import numdifftools as nd
-from numpy import dtype
+import numpy as npy
+import random as random
 import scipy.io as mat
 from autograd import make_jvp
 from minimization import Minimizer
 from numpy.linalg import eig
 from sklearn.decomposition import PCA
+from mayavi import mlab
+from autograd import jacobian
+from utils import *
 
 path = 'FPAnalysis/simulation_results'
-inputs = mat.loadmat(path + '/inputs1.mat')
+inputs = mat.loadmat(path + '/inputs_small_W_1rep.mat')
+id = 'small_w_rep1_jac'
 
-session = 8
-
-def nonlin(x):
-    return np.maximum(x, np.zeros(np.size(x)))
-
-
-def build_fun(inputs, session):
-    tau = inputs['tau']
-    alpha = inputs['alpha']
-    W = inputs['W'][:,:,session-1]
-    V_ff = inputs['V_ff'][:,session-1]
+experiments = 3 #number of eperimnets simulated
+n_trials = 1 #number of sampled trials (simulations). Max=200
+n_tpoints = 1 #number of time points sampled from the same simualtion. Max=100
 
 
-    def fun(x):
-        return (- x + V_ff + W * alpha * nonlin(x) / tau)
-    return fun
-
-def build_qfun(fun):
+for experiment in range(experiments):
+    # sampling states and activations
+    print('Experiment:'+str(experiment+1)+'\n Sampling....')
+    V_ff_sample, W_sample, V_rec_sample = sample_states(inputs, n_trials, n_tpoints, 1, 0.5)
+    #print(npy.shape(V_ff), npy.shape(W), npy.shape(V_rec))
+    # Find fixed points through minimizing the velocity function
     
-    def qfun(x):
-        return 1 / 512 * np.sum(fun(x) ** 2)
+    fps_good = npy.empty((512,1))
+    jac_good  = npy.empty((512,512,1))
+    good = 0
+    for i in range(n_trials*n_tpoints):
+        fp = npy.empty((512,1))
 
-    return qfun
+        print('trial:', str(int(n_tpoints/(i+1))), 'time point:', str((int(n_trials/(i+1)))))
+        minimizer = Minimizer(alr_decayr=0.5, epsilon=0.1, init_agnc=1)
+        fun_ds = build_ds(inputs, V_ff_sample[:,i], W_sample[:,:,i])
+        fun = build_fun(inputs, V_ff_sample[:,i], W_sample[:,:,i])
+        qfun = build_qfun(inputs, V_ff_sample[:,i], W_sample[:,:,i])
+        fp[:,0] = minimizer.adam_optimization(fun_ds, V_rec_sample[:, i])
+        q = qfun(fp[:,0])
+        jac = make_jvp(fun)(fp[:,0])
+        #jac =  jacobian(fun)(fp)
+        if q < 1:
+            if good == 0:
+                fps_good[:,0] = fp[:,0]
+                jac_good = jac(np.eye(512)[:,0])
+            else:
+                fps_good = npy.append(fps_good, fp, 1)
+                #jac_good = npy.append(jac_good, jac, 2)
+            good = good+1
+    #fps_good = npy.delete(fps_good, 0, 0)
+    #jac_good = npy.delete(jac_good, [0, 0], 0)
+    if good == 0:
+        print('No fixed points were found...')
+    else:
+        ux, idx = npy.unique(fps_good.round(decimals=5), axis=1, return_index=True)
+        # Select and save unique fixed points
+        unique_fps = fps_good[:,idx]
+        unique_V_ff= V_ff_sample[:,idx]
+        unique_W= W_sample[:,:,idx]
+        unique_V_rec= V_rec_sample[:,idx]
+        #unique_jac = jac
+        #compute jacobian at fixed point
+        #jac_fun= make_jvp(fun)(unique_fps)
+        #value_of_fun, jac = jac_fun(unique_fps)
+    
 
-def sample_activations(V_rec):
-    samples = V_rec
-    return samples 
-
-def add_gaussian_noise(self, data, noise_scale=0.0):
-        """ Adds IID Gaussian noise to Numpy data.
-        Args:
-            data: Numpy array.
-            noise_scale: (Optional) non-negative scalar indicating the
-            standard deviation of the Gaussian noise samples to be generated.
-            Default: 0.0.
-        Returns:
-            Numpy array with shape matching that of data.
-        Raises:
-            ValueError if noise_scale is negative.
-        """
-        # Add IID Gaussian noise
-        if noise_scale == 0.0:
-            return data # no noise to add
-        if noise_scale > 0.0:
-            return data + noise_scale * self.rng.randn(*data.shape)
-        elif noise_scale < 0.0:
-            raise ValueError('noise_scale must be non-negative,'
-                             ' but was %f' % noise_scale)
-
-
-V_ff = inputs['V_ff'][:,session-1]
-V_rec = inputs['V_rec'][:,session-1]
-
-fun = build_fun(inputs,session)
-qfun = build_qfun(fun)
-
-
-
-minimizer = Minimizer()
-fp = minimizer.adam_optimization(qfun, V_rec)
-
-#compute jacobian at fixed point
-jac_fun= make_jvp(fun)(fp)
-value_of_fun, jac = jac_fun(fp)
+        mdict = {'fps': unique_fps, 'V_ff': unique_V_ff, 'V_rec': unique_V_rec, 'W': unique_W}
+        mat.savemat(path+'/'+str(id)+'_exp'+str(experiment)+'.mat', mdict)
 
 
-
-eigenvalues,v=eig(jac)
-print (eigenvalues)
-
-X = np.stack((V_ff, V_rec), axis =1)
-pca = PCA(n_components=2)
-pca.fit(X)
-print(pca.explained_variance_ratio_)
-print(pca.singular_values_)
-
-mdict = {'fp': fp, 'jacobian': jac}
-mat.savemat(path+'/begin_fp.mat',mdict)
