@@ -53,8 +53,10 @@ classdef RM_RL < handle
         alpha                   % gain of spike encoder
         J_ff                    % feedforward connection strength
         J_rec                   % recurrent connection strength
-        sigma_rec                   % width of ricker wavelet
+        sigma                   % width of ricker wavelet
         delta                   % damping factor of ricker wavelet
+        a_i
+        c_i
         k                       % scaling of variance
         C                       % decision criterion
         eta                     % gobal learning rate
@@ -65,7 +67,7 @@ classdef RM_RL < handle
         Theta                   % preferred orientation of each neuron
         V_0                     % baseline membrane potential
         W_rec                   % recurrent connectivity
-        
+        wavelet
         
         % experimental setup
         Phi_0                   % baseline stimulus orientation
@@ -93,7 +95,7 @@ classdef RM_RL < handle
             addOptional(p,'sigma_ff',45);
             addOptional(p,'J_ff',.5);
             addOptional(p,'J_rec',1);
-            addOptional(p,'sigma_rec',3);
+            addOptional(p,'sigma',3);
             addOptional(p,'delta',0.2);
             addOptional(p,'k',4);
             addOptional(p,'C',.53);
@@ -103,7 +105,8 @@ classdef RM_RL < handle
             addOptional(p,'tau',15e-3);
             addOptional(p,'trials',480);
             addOptional(p,'OD',7.5);
-            
+            addOptional(p,'c_i',1.6875e-3);
+            addOptional(p,'a_i',1.4);            
             
             p.parse(varargin{:});
             
@@ -126,8 +129,10 @@ classdef RM_RL < handle
             self.sigma_ff = p.Results.sigma_ff;
             self.J_ff = p.Results.J_ff;
             self.J_rec = p.Results.J_rec;
-            self.sigma_rec = p.Results.sigma_rec;
+            self.sigma = p.Results.sigma;
             self.delta = p.Results.delta;
+            self.c_i = p.Results.c_i;
+            self.a_i = p.Results.a_i;
             self.k = p.Results.k;
             self.C = p.Results.C;
             self.eta = p.Results.eta;
@@ -139,8 +144,12 @@ classdef RM_RL < handle
             self.Theta = linspace(-90,90,self.N)';
             self.mean_JND =  0;
             self.V_0 = zeros(self.N,1);
-            self.W_rec = self.J_rec * toeplitz(self.ricker(...
-                self.Theta, self.sigma_rec, self.delta));
+            % initial recurrent weight matrix
+            self.wavelet = self.ricker(self.Theta, self.sigma, self.delta);
+            half = self.wavelet(1:self.N/2);
+            self.wavelet(1:self.N/2) = self.wavelet((self.N/2)+1:self.N);
+            self.wavelet((self.N/2)+1:self.N) = half;
+            self.W_rec = self.J_rec*toeplitz(self.wavelet);
             self.Phi_0 = 135;
             self.Phi = self.Phi_0;
             self.OD_0 = p.Results.OD;
@@ -152,8 +161,7 @@ classdef RM_RL < handle
         
         % resetting the model
         function reset(self)
-            self.W_rec = toeplitz(self.ricker(...
-                (self.Theta)', self.sigma_rec, self.delta));
+            self.W_rec = self.J_rec*toeplitz(self.wavelet);
             self.Eta = self.eta*ones(self.N);
             self.OD = self.OD_0;
         end
@@ -223,10 +231,10 @@ classdef RM_RL < handle
             self.counter = 0;
             W = zeros(self.N,self.N,self.trials);
             V_ff = zeros(self.N,self.trials);
-            V_rec = zeros(self.N,100,self.trials);
+            V_rec = zeros(self.N,self.trials);
             C = zeros(1,self.trials);
             for t=1:self.trials
-                [W(:,:,t),V_ff(:,t),V_rec(:,:,t), C(t)] = self.trial();
+                [W(:,:,t),V_ff(:,t),V_rec(:,t), C(t)] = self.trial();
                 self.mean_JND = self.mean_JND+...
                     (self.OD-self.mean_JND)/t;
             end
@@ -241,13 +249,14 @@ classdef RM_RL < handle
                 -((self.Adiff(self.Theta,self.Phi)).^2)...
                 /(2 * self.sigma_ff^2));
             v = -inv(W - eye(512))* V_ff;
-            M_ref = v;
+            r = self.alpha*v;
+            M_ref = r*self.t_sim;
             Phi_probe = self.Phi + ((rand()>.5) * 2 - 1) * self.OD;
             V_ff = self.J_ff * exp(...
                 -((self.Adiff(self.Theta,Phi_probe)).^2)...
                 /(2 * self.sigma_ff^2));
             v = -inv(W - eye(512)) * V_ff;
-            v = v';
+            r = self.alpha*v;
             M_probe = r * self.t_sim;
             D = abs(M_ref - M_probe)./...
                 ((self.k * (M_ref+M_probe)).^.5);
@@ -260,9 +269,9 @@ classdef RM_RL < handle
                 if rand() < (1 - self.p_correct)
                     % update W_rec
                     dW_rec = self.eta*((1-self.W_rec/...
-                        (self.J_rec*self.sigma_rec*2^self.delta)).^self.mu).*...
+                        (self.J_rec*self.c_i*2^self.a_i)).^self.mu).*...
                         (r*r');
-                    self.W_rec = self.W_rec+dW_rec;
+                    self.W_rec = self.W_rec-dW_rec;
                 end
                 self.OD = self.OD*1.2;
                 self.counter = 1;
@@ -270,9 +279,9 @@ classdef RM_RL < handle
                 if rand() < self.p_incorrect
                     % update W_rec
                     dW_rec = self.eta*((1-self.W_rec/...
-                        (self.J_rec*self.sigma_rec*2^self.delta)).^self.mu).*...
+                        (self.J_rec*self.c_i*2^self.a_i)).^self.mu).*...
                         (r*r');
-                    self.W_rec = self.W_rec+dW_rec;
+                    self.W_rec = self.W_rec-dW_rec;
                 end
                 if self.counter==4
                     self.OD = self.OD/1.2;
