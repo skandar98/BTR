@@ -114,7 +114,7 @@ classdef RM_GL < handle
             
             %differential equation of membrane potential
             self.dV = @(V_rec,V_ff,W,alpha,tau)...
-                (-V_rec+V_ff+W*alpha*max(V_rec,0))/tau;
+                (-V_rec+V_ff+W*alpha*V_rec)/tau;
             
 
             self.Adiff = @(A,B)...
@@ -221,22 +221,51 @@ classdef RM_GL < handle
                 -((self.Adiff(self.Theta,self.Phi + OD)).^2)...
                 /(2*self.sigma_ff^2));
             v = -inv(W - eye(512)) * V_ff;
-            r = self.alpha*v;
+            r = self.alpha*max(v,0);
             %r = self.alpha*max(v,0); %%get rid of this to make the system linear
         end
-        
-        % simulation of training session
-        function [V_ff, V_rec, W, C] = session(self)
+        function [q_p, q_r, r_p, r_r, Phi_probe] = comp_q(self)
+            W = self.W_exc-self.W_inh;
+            tspan = linspace(0, self.t_sim, 100);
+            
+            V_ff = self.J_ff * exp(...
+                -((self.Adiff(self.Theta,self.Phi)).^2)...
+                /(2 * self.sigma_ff^2));
+            v = -inv(W - eye(512)) * V_ff;
+            r_r = v;
+            dv = self.dV(v, V_ff, W, self.alpha, self.tau);
+            q_r = (1/self.N) * (dv'*dv);
+            
+            Phi_probe = self.Phi + ((rand()>.5) * 2 - 1) * self.OD;
+            V_ff = self.J_ff * exp(...
+                -((self.Adiff(self.Theta, Phi_probe)).^2)...
+                /(2 * self.sigma_ff^2));
+            v = -inv(W - eye(512)) * V_ff;
+            r_p = v;
+            dv = self.dV(v, V_ff, W, self.alpha, self.tau);
+            q_p = (1/self.N) * (dv'*dv);
+        end
+        function [q_p, q_r, r_p, r_r, OD, Phi_probe]= session(self)
             self.mean_JND = 0;
             self.counter = 0;
-            W = zeros(self.N,self.N,self.trials);
-            V_ff = zeros(self.N,self.trials);
-            V_rec = zeros(self.N,self.trials);
-            C = zeros(1,self.trials);
+            %
+            m_JND       = NaN(self.trials, 1);
+            JND         = NaN(self.trials, 1);
+            q_p         = NaN(self.trials, 1);
+            q_r         = NaN(self.trials, 1);
+            r_p         = NaN(self.trials, self.N);
+            r_r         = NaN(self.trials, self.N);
+            OD          = NaN(self.trials, 1);
+            Phi_probe   = NaN(self.trials, 1);
+            %
             for t=1:self.trials
-                [W(:,:,t),V_ff(:,t),V_rec(:,t), C(t)] = self.trial();
+                self.trial();
                 self.mean_JND = self.mean_JND+...
                     (self.OD-self.mean_JND)/t;
+                m_JND(t)    = self.mean_JND;
+                JND(t)      = self.OD-self.mean_JND;
+                [q_p(t), q_r(t), r_p(t, :), r_r(t, :), Phi_probe(t)]        = self.comp_q();
+                OD(t)       = self.OD;
             end
         end
     end
@@ -250,15 +279,14 @@ classdef RM_GL < handle
                 -((self.Adiff(self.Theta,self.Phi)).^2)...
                 /(2 * self.sigma_ff^2));
             v = -inv(W - eye(512)) * V_ff;
-            r = self.alpha*v;
+            r = self.alpha*max(v,0);
             M_ref = r * self.t_sim;
             Phi_probe = self.Phi + ((rand()>.5) * 2 - 1) * self.OD;
             V_ff = self.J_ff * exp(...
                 -((self.Adiff(self.Theta,Phi_probe)).^2)...
                 /(2 * self.sigma_ff^2));
             v = -inv(W - eye(512)) * V_ff;
-            r = self.alpha*v;
-            v = v';
+            r = self.alpha*max(v,0);
             M_probe = r * self.t_sim;
             D = abs(M_ref - M_probe)./...
                 ((self.k * (M_ref+M_probe)).^.5);
@@ -268,18 +296,14 @@ classdef RM_GL < handle
             
             if ~correct
                 if rand() < (1 - self.p_correct)
-                    dW_inh = self.eta*((1-self.W_inh/...
-                        (self.J_rec*self.c_i*2^self.a_i)).^self.mu).*...
-                        (r*r');
+                    dW_inh = self.eta*(v*v');
                     self.W_inh = self.W_inh+dW_inh;
                 end
                 self.OD = self.OD*1.2;
                 self.counter = 1;
             else
                 if rand() < self.p_incorrect
-                    dW_inh = self.eta*((1-self.W_inh/...
-                        (self.J_rec*self.c_i*2^self.a_i)).^self.mu).*...
-                        (r*r');
+                    dW_inh = self.eta*(v*v');
                     self.W_inh = self.W_inh+dW_inh;
                 end
                 if self.counter==4
