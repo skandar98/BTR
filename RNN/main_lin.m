@@ -14,7 +14,7 @@ clear all;close all;clc
 
 OD_0     =   4.5;           % initial orientation difference
 Sessions =   8;             % number of sessions
-Reps     =  1;             % number of times each experiment is repeated
+Reps     =  5;             % number of times each experiment is repeated
 Trials   = 480;             % number of trials per session
 
 
@@ -122,6 +122,7 @@ for r=1:Reps
 %         Exp{1}.Ab(r,s) = Q{1}.get_JND * 2;
         Exp{2}.Ab(r,s) = Q{2}.get_JND * 2;
     end
+    
     for i=-90:90
         [rate_curve(r,2,i+91,:), v] = Q{2}.get_response(i); % INT tuning curve
     end
@@ -140,6 +141,7 @@ for r=1:Reps
         Int{2}.left(r,s) = Q{2}.get_JND * 2;
 %         Int{3}.left(r,s) = Q{3}.get_JND * 2;
     end
+    Q{2}.set_PHI(135);
     for i=-90:90
         [rate_curve(r,3,i+91,:), v] = Q{2}.get_response(i); % INT tuning curve
     end
@@ -155,6 +157,7 @@ for r=1:Reps
 %         Int{3}.right(r,s) = Q{3}.get_JND * 2;
 %         
     end
+    Q{2}.set_PHI(135);
     for i=-90:90
         [rate_curve(r,4,i+91,:), v] = Q{2}.get_response(i); % INT tuning curve
     end
@@ -184,52 +187,38 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                             plotting                                %%%
 
-% Pos = [200 200  950 350];
-% figure('Color','w','Position' ,Pos)
-
-% experiment 1
-% subplot(1,3,1,'Fontsize',9)
-% hold all
-% figure(1)
-% hold all
-% plot(mean(Exp{1}.Ab),'color',[0 .75 0],'linestyle','--','linewidth',2.5)
-% plot(mean(Exp{1}.At),'color',[0 .75 0],'linewidth',2.5)
-% set(gca, 'XTick', 1:8)
-% set(gca, 'YScale', 'log')
-% xlim([0.5 8.5])
-% ylim([1.5 8.5])
-% xlabel('session')
-% title('Experiment 1 (ACA)')
-% legend('A_B','A_T')
-% legend('boxoff')
 
 % experiment 2
-figure(2) % JND reference
+jnds=figure(); % JND reference
 subplot(121)
 hold all, grid on
-plot(Exp{2}.Ab,'color',[0 0 .75],'linestyle','--','linewidth',2.5)
-plot(Exp{2}.At,'color',[0 0 .75],'linewidth',2.5)
+plot(mean(Exp{2}.Ab),'color',[0 0 .75],'linestyle','--','linewidth',2.5)
+plot(mean(Exp{2}.At),'color',[0 0 .75],'linewidth',2.5)
 set(gca, 'XTick', 1:8), set(gca, 'YScale', 'log')
-xlim([0.5 8.5]),        ylim([8.5 20])
+xlim([0.5 8.5]),        ylim([1.5 8.5])
 xlabel('session'),      ylabel('JND [deg]')
-title('Experiment 2 (ABA)'),    legend('A_B','A_T'),        legend('boxoff')
+title('Learning at baseline and test'),    legend('A_B','A_T'),        legend('boxoff')
 
 subplot(122) % interference
 hold all, grid on 
-plot(Int{2}.left,'r-.', 'linewidth',2.5)
-plot(Int{2}.right,'g--', 'linewidth',2.5)
+plot(mean(Int{2}.left),'r-.', 'linewidth',2.5)
+plot(mean(Int{2}.right),'g--', 'linewidth',2.5)
 set(gca, 'XTick', 1:8),     set(gca, 'YScale', 'log')
-xlim([0.5 8.5]),            ylim([8.5 20])
+xlim([0.5 8.5]),            ylim([1.5 8.5])
 xlabel('session'),          ylabel('JND [deg]')
-title('Experiment 2 (ABA)')
+title('Learning at interference')
 legend('$105^\circ$','$165^\circ$', 'interpreter', 'latex'),    legend('boxoff')
 
-figure(3) % q(sessions) probe
+qprobe = figure(); % q(sessions) probe
 subplot(121)
 plot(mean(squeeze(qp{2}.Ab(1, :, :)), 2), 'color',[0 0 .75],'linestyle','--','linewidth',2.5), hold on
 plot(mean(squeeze(qp{2}.At(1, :, :)), 2), 'color',[0 0 .75],'linewidth',2.5), grid on, hold off
 xlabel('session'), ylabel('q [-]')
 xlim([0.5 8.5])
+title("A)")
+legend('A_B','A_T')
+ax = gca;
+ax.TitleHorizontalAlignment = 'left';
 
 subplot(122)
 plot(mean(squeeze(qp{2}.left(1, :, :)), 2), 'r-.', 'linewidth',2.5), grid on, hold on
@@ -237,13 +226,22 @@ plot(mean(squeeze(qp{2}.right(1, :, :)), 2),'g--', 'linewidth',2.5), hold off
 xlabel('session'), ylabel('q [-]')
 xlim([0.5 8.5])
 legend('$105^\circ$','$165^\circ$', 'interpreter', 'latex')
+title("B)")
+ax = gca;
+ax.TitleHorizontalAlignment = 'left';
 
-figure(4) % q(sessions) reference
+qref = figure();
 subplot(121)
 plot(mean(squeeze(qr{2}.Ab(1, :, :)), 2), 'color',[0 0 .75],'linestyle','--','linewidth',2.5), hold on 
 plot(mean(squeeze(qr{2}.At(1, :, :)), 2), 'color',[0 0 .75],'linewidth',2.5), grid on
 xlabel('session'), ylabel('q [-]')
 xlim([0.5 8.5])
+legend('A_B','A_T')
+title("C)")
+ax = gca;
+ax.TitleHorizontalAlignment = 'left';
+
+
 
 subplot(122)
 plot(mean(squeeze(qr{2}.left(1, :, :)), 2), 'r-.', 'linewidth',2.5), grid on, hold on
@@ -251,20 +249,38 @@ plot(mean(squeeze(qr{2}.right(1, :, :)), 2),'g--', 'linewidth',2.5), hold off
 xlabel('session'), ylabel('q [-]')
 xlim([0.5 8.5])
 legend('$105^\circ$','$165^\circ$', 'interpreter', 'latex')
+title("D)")
+ax = gca;
+ax.TitleHorizontalAlignment = 'left';
 
 %% Part A
 symbols = ['+', '*', 's', '^', 'd', 'p', 'h', '<'];     % symbols per depicted session (max 8)
 legend_entries = ["Session1", "Session2", "Session3", "Session4", "Session5", "Session6", "Session7", "Session8"]';
 legend_indices = [1 3 5 7 9 11 13 15];
+fpcaAb       = figure();    fpcaAb.Position =[1 1 1920 720];        
+fpcaleft     = figure();    fpcaleft.Position =[1 1 1920 720];      
+fpcaright    = figure();    fpcaright.Position =[1 1 1920 720];      
+fpcaAt       = figure();    fpcaAt.Position =[1 1 1920 720];         
+fvar         = figure();    fvar.Position =[1 1 1911 524];           
+
+
+
+
 % PCA of reference dataset
 RR = reshape(squeeze(rr{2}.Ab(1, :, :, :)), Sessions*Trials, N);
 [coeff_rr,score_rr,latent_rr, ~, explained_rr, mu_rr] = pca(RR);
 % explained variance
-figure(51)
+figure(fvar)
+subplot(1,4,1);
     plot(cumsum(explained_rr(1:5)), 'LineWidth', 1.5), grid on
     xlabel('# PC'), ylabel('CEV [%]')
+    xlim([1 4])
+    title("A)")
+ax = gca;
+ax.TitleHorizontalAlignment = 'left';
 
-figure(5) % colored by kinetic energy
+figure(fpcaAb) % colored by kinetic energy
+subplot(1,2,1);
 k = 1;  hp = NaN(Sessions, 1); hold all
 for i = 1:Sessions
     % Reference
@@ -273,13 +289,19 @@ for i = 1:Sessions
 
     % Probe
     score = (squeeze(rp{2}.Ab(1, i, :, :)) - mu_rr)*coeff_rr;
-     hp(2*i) = scatter(score(:, 2), score(:, 1), [], squeeze(qp{2}.Ab(1, i, :)), 'Marker', symbols(k));
+    hp(2*i-1) = scatter(score(:, 2), score(:, 1), [], squeeze(qp{2}.Ab(1, i, :)), 'Marker',symbols(k));
     k = k+1;
 end
-xlabel('PC 2'), ylabel('PC 1'), grid on, colorbar(), hold off
+xlabel('PC 2'), ylabel('PC 1'), grid on,hold off, title("A)")
+c = colorbar(); ylabel(c,'kinetic energy (q)', 'FontSize',14);
+
+
+ax = gca; ax.TitleHorizontalAlignment = 'left';
 legend(hp(legend_indices), legend_entries)
 
-figure(52) % colored by orientation difference
+
+figure(fpcaAb) % colored by orientation difference
+s = subplot(1,2,2);
 k = 1;  hp = NaN(Sessions, 1); hold all
 for i = 1:Sessions
     % Reference
@@ -291,8 +313,13 @@ for i = 1:Sessions
     hp(2*i-1)= scatter(score(:, 2), score(:, 1), [], squeeze(Phi{2}.Ab(1, i, :)), 'Marker',symbols(k)); % potentially also OD
     k = k+1; 
 end
-xlabel('PC 2'), ylabel('PC 1'), grid on, colorbar(), hold off
+
+xlabel('PC 2'), ylabel('PC 1'), grid on, c = colorbar();ylabel(c,'Probe orientation [deg]', 'FontSize',14); hold off
+title("B)")
+ax = gca;
+ax.TitleHorizontalAlignment = 'left';
 legend(hp(legend_indices), legend_entries)
+
 
 
 
@@ -301,11 +328,17 @@ legend(hp(legend_indices), legend_entries)
 RRl = reshape(squeeze(rr{2}.left(1, :, :, :)), Sessions*Trials, N);
 [coeff_rrl,score_rrl,latent_rrl, ~, explained_rrl, mu_rrl] = pca(RRl);
 % explained variance
-figure(71)
+figure(fvar)
+subplot(1,4,2)
 plot(cumsum(explained_rrl(1:5)), 'LineWidth', 1.5), grid on
 xlabel('# PC'), ylabel('CEV [%]')
+xlim([1 4])
+title('B)')
+ax = gca;
+ax.TitleHorizontalAlignment = 'left';
 
-figure(7) % colored by kinetic energy
+figure(fpcaleft) % colored by kinetic energy
+subplot(1,2,1)
 k = 1;  hp = NaN(Sessions, 1); hold all
 for i = 1:Sessions
     % Reference
@@ -317,10 +350,14 @@ for i = 1:Sessions
     hp(2*i-1)= scatter(score(:, 2), score(:, 1), [], squeeze(qp{2}.left(1, i, :)), 'Marker',symbols(k));
     k = k+1;
 end
-xlabel('PC 2'), ylabel('PC 1'), grid on, colorbar(), hold off
+xlabel('PC 2'), ylabel('PC 1'), grid on, hold off, title("A)")
+c = colorbar(); ylabel(c,'kinetic energy (q)', 'FontSize',14);
+ax = gca;
+ax.TitleHorizontalAlignment = 'left';
 legend(hp(legend_indices), legend_entries)
 
-figure(72) % colored by orientation difference
+figure(fpcaleft) % colored by orientation difference
+subplot(1,2,2)
 k = 1;  hp = NaN(Sessions, 1); hold all
 for i = 1:Sessions
     % Reference
@@ -332,57 +369,83 @@ for i = 1:Sessions
     hp(2*i-1)= scatter(score(:, 2), score(:, 1), [], squeeze(Phi{2}.left(1, i, :)), 'Marker',symbols(k)); % potentially also OD
     k = k+1;
 end
-xlabel('PC 2'), ylabel('PC 1'), grid on, colorbar(), hold off
+xlabel('PC 2'), ylabel('PC 1'), grid on, c = colorbar();ylabel(c,'Probe orientation [deg]', 'FontSize',14); hold off
+title("B)")
+ax = gca;
+ax.TitleHorizontalAlignment = 'left';
 legend(hp(legend_indices), legend_entries)
 
 % interference right 165
 RRr = reshape(squeeze(rr{2}.right(1, :, :, :)), Sessions*Trials, N);
 [coeff_rrr,score_rrr,latent_rrr, ~, explained_rrr, mu_rrr] = pca(RRr);
 % explained variance
-figure(81)
+figure(fvar)
+subplot(1,4,3)
 plot(cumsum(explained_rrr(1:5)), 'LineWidth', 1.5), grid on
 xlabel('# PC'), ylabel('CEV [%]')
+xlim([1 4])
+title('C)')
+ax = gca;
+ax.TitleHorizontalAlignment = 'left';
 
-figure(8) % colored by kinetic energy
+
+
+figure(fpcaright) % colored by kinetic energy
+subplot(1,2,1)
 k = 1;  hp = NaN(Sessions, 1); hold all
 for i = 1:Sessions
     % Reference
     score = (squeeze(rr{2}.right(1, i, :, :)) - mu_rrr)*coeff_rrr;
-    hp(2*i) = scatter3(score(:, 2), score(:, 1), score(:, 3), [], squeeze(qr{2}.right(1, i, :)), 'Marker', '.');
+    hp(2*i) = scatter(-score(:, 2), score(:, 1), [], squeeze(qr{2}.right(1, i, :)), 'Marker', '.');
 
     % Probe
     score = (squeeze(rp{2}.right(1, i, :, :)) - mu_rrr)*coeff_rrr;
-    hp(2*i-1)= scatter3(score(:, 2), score(:, 1), score(:, 3), [], squeeze(qp{2}.right(1, i, :)), 'Marker',symbols(k));
+    hp(2*i-1)= scatter(-score(:, 2), score(:, 1), [], squeeze(qp{2}.right(1, i, :)), 'Marker',symbols(k));
     k = k+1;
 end
-xlabel('PC 2'), ylabel('PC 1'),zlabel('PC3'), grid on, colorbar(), hold off
+xlabel('PC 2'), ylabel('PC 1'), grid on, hold off, title("C)")
+c = colorbar(); ylabel(c,'kinetic energy (q)','FontSize',14);
+ax = gca;
+ax.TitleHorizontalAlignment = 'left';
 legend(hp(legend_indices), legend_entries)
 
 
-figure(82) % colored by orientation difference
+figure(fpcaright) % colored by orientation difference
+subplot(1,2,2)
 k = 1;  hp = NaN(Sessions, 1); hold all
 for i = 1:Sessions
     % Reference
     score = (squeeze(rr{2}.right(1, i, :, :)) - mu_rrr)*coeff_rrr;
-    hp(2*i) = scatter(score(:, 2), score(:, 1), 'k.'); 
+    hp(2*i) = scatter(-score(:, 2), score(:, 1), 'k.'); 
 
     % Probe
     score = (squeeze(rp{2}.right(1, i, :, :)) - mu_rrr)*coeff_rrr;
-    hp(2*i-1)= scatter(score(:, 2), score(:, 1), [], squeeze(Phi{2}.right(1, i, :)), 'Marker',symbols(k)); % potentially also OD
+    hp(2*i-1)= scatter(-score(:, 2), score(:, 1), [], squeeze(Phi{2}.right(1, i, :)), 'Marker',symbols(k)); % potentially also OD
     k = k+1;
 end
-xlabel('PC 2'), ylabel('PC 1'), grid on, colorbar(), hold off
+xlabel('PC 2'), ylabel('PC 1'), grid on, c = colorbar(); ylabel(c,'Probe orientation [deg]','FontSize',14);
+hold off
+title("D)")
+ax = gca;
+ax.TitleHorizontalAlignment = 'left';
 legend(hp(legend_indices), legend_entries)
 
 %% Part A (At)
 RRt = reshape(squeeze(rr{2}.At(1, :, :, :)), Sessions*Trials, N);
 [coeff_rrt,score_rrt,latent_rrt, ~, explained_rrt, mu_rrt] = pca(RRt);
 % explained variance
-figure(91)
+figure(fvar)
+subplot(1,4,4)
 plot(cumsum(explained_rrt(1:5)), 'LineWidth', 1.5), grid on
 xlabel('# PC'), ylabel('CEV [%]')
+xlim([1 4])
+title('D)')
+ax = gca;
+ax.TitleHorizontalAlignment = 'left';
 
-figure(9) % colored by kinetic energy
+
+figure(fpcaAt) % colored by kinetic energy
+subplot(1,2,1)
 k = 1;  hp = NaN(Sessions, 1); hold all
 for i = 1:Sessions
     % Reference
@@ -394,11 +457,16 @@ for i = 1:Sessions
     hp(2*i-1)= scatter(score(:, 2), score(:, 1), [], squeeze(qp{2}.At(1, i, :)), 'Marker',symbols(k));
     k = k+1;
 end
-xlabel('PC 2'), ylabel('PC 1'), grid on, colorbar(), hold off
+xlabel('PC 2'), ylabel('PC 1'), grid on, hold off
+title("C)")
+c = colorbar(); ylabel(c,'kinetic energy (q)', 'FontSize',14);
+ax = gca;
+ax.TitleHorizontalAlignment = 'left';
 legend(hp(legend_indices), legend_entries)
 
 
-figure(92) % colored by orientation difference
+figure(fpcaAt) % colored by orientation difference
+subplot(1,2,2)
 k = 1;  hp = NaN(Sessions, 1); hold all
 for i = 1:Sessions
     % Reference
@@ -410,28 +478,42 @@ for i = 1:Sessions
     hp(2*i-1)= scatter(score(:, 2), score(:, 1), [], squeeze(Phi{2}.At(1, i, :)), 'Marker',symbols(k)); % potentially also OD
     k = k+1;
 end
-xlabel('PC 2'), ylabel('PC 1'), grid on, colorbar(), hold off
+xlabel('PC 2'), ylabel('PC 1'), grid on, hold off
+title("D)")
+c = colorbar();ylabel(c,'Probe orientation [deg]', 'FontSize',14);
+ax = gca;
+ax.TitleHorizontalAlignment = 'left';
 legend(hp(legend_indices), legend_entries)
 
+%% save
+path = 'RNN/linear_results/';
+saveas(qprobe, path+"qplotprobe.png")
+saveas(qref, path+"qplotref.png")
+saveas(jnds, path+"JNDs.png")
+saveas(fpcaAb, path+"pcAb.png")
+saveas(fpcaleft, path+"pcLeft.png")
+saveas(fpcaright, path+"pcRight.png")
+saveas(fpcaAt, path+"pcAt.png")
+saveas(fvar, path+"explained_variance.png")
+
 %% TC plot
-figure(1) 
+TCplot = figure();          TCplot.Position = [1 1 1920 1080];
 X   = linspace(45, 225, 181);
 %X   = linspace(45,225,100) 
 idx = round(linspace(40,472,7));
 
 
-subplot(3,3,2)
+subplot(3,2,1)
 for i = 1:7
     plot(X,squeeze(rate_curve(1,1,:,idx(i))))
     hold all
 end
 xlim([45 225])
-xline(135,'r')
 title("naive")
 xlabel("Orientation (degrees)")
 ylabel("Firing rate")
 
-subplot(3,3,3)
+subplot(3,2,2)
 for i = 1:7
     plot(X,squeeze(rate_curve(1,2,:,idx(i))))
     hold all
@@ -442,29 +524,29 @@ title("AB (135)")
 xlabel("Orientation (degrees)")
 ylabel("Firing rate")
 
-subplot(3,3,4)
+subplot(3,2,3)
 for i = 1:7
     plot(X,squeeze(rate_curve(1,3,:,idx(i))))
     hold all
 end
 xlim([45 225])
-xline(135,'r')
+xline(105,'r')
 title("Left (105)")
 xlabel("Orientation (degrees)")
 ylabel("Firing rate")
 
-subplot(3,3,6)
+subplot(3,2,4)
 for i = 1:7
     plot(X,squeeze(rate_curve(1,4,:,idx(i))))
     hold all
 end
 xlim([45 225])
-xline(135,'r')
+xline(165,'r')
 title("Right (165)")
 xlabel("Orientation (degrees)")
 ylabel("Firing rate")
 
-subplot(3,3,8)
+subplot(3,2,6)
 for i = 1:7
     plot(X,squeeze(rate_curve(1,5,:,idx(i))))
     hold all
@@ -474,3 +556,5 @@ xline(135,'r')
 title("AT (135)")
 xlabel("Orientation (degrees)")
 ylabel("Firing rate")
+
+saveas(TCplot, "TCplot.png")
