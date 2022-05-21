@@ -296,14 +296,19 @@ classdef RM_GL < handle
             
             if ~correct
                 if rand() < (1 - self.p_correct)
-                    dW_inh = self.eta*(v*v');
+                   dW_inh = self.eta*((1-self.W_inh/...
+                        (self.J_rec*self.c_i*2^self.a_i)).^self.mu).*...
+                        (r*r');
+                   
                     self.W_inh = self.W_inh+dW_inh;
                 end
                 self.OD = self.OD*1.2;
                 self.counter = 1;
             else
                 if rand() < self.p_incorrect
-                    dW_inh = self.eta*(v*v');
+                    dW_inh = self.eta*((1-self.W_inh/...
+                        (self.J_rec*self.c_i*2^self.a_i)).^self.mu).*...
+                        (r*r');
                     self.W_inh = self.W_inh+dW_inh;
                 end
                 if self.counter==4
