@@ -29,6 +29,7 @@ decision
 1. The Matlab classes RM_GN.m and RM_GL.m, the nonlinear and linear recurrent models.
 2. The Matlab scripts main_nonlin.m and main_lin.m, used to run the simulations, collect and visualise data.
 3. The MAtlab script simulate_forward.m used for confirmng the validity of the utilized simulation timespan.
+4. old/ contains further recurrent model versions that were ommited from the final paper.
 
 - BTR/FPAnalysis/ contains depricated files containing additional analyses that were ommited from the final paper. 
  
